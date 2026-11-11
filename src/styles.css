@@ -114,6 +114,17 @@ input, select { background: var(--paper); border: 1.5px solid var(--line); borde
 .cell span { opacity: 0.5; font-size: 18px; }
 .cell.over { background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: var(--accent); }
 .item { z-index: 1; background: color-mix(in srgb, var(--c) 16%, var(--paper)); border: 1.5px solid color-mix(in srgb, var(--c) 60%, transparent); border-radius: 10px; padding: 6px 8px; cursor: grab; touch-action: manipulation; user-select: none; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.item.hasthumb { flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; padding: 5px; }
+.itxt { display: flex; flex-direction: column; min-width: 0; }
+.thumb { flex: 0 0 auto; width: 52px; height: 52px; border-radius: 8px; overflow: hidden; background: var(--soft); display: block; }
+.thumb img, .thumb .svgart, .thumb svg { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.item[style*="span 2"] .thumb, .item[style*="span 3"] .thumb { width: 64px; height: 64px; }
+.traychip .thumb { width: 26px; height: 26px; border-radius: 50%; margin-right: 6px; margin-left: -6px; }
+.item.sug { border-style: dashed; }
+.item.hasthumb.t-family, .item.hasthumb.t-solo { flex-direction: column; align-items: stretch; gap: 5px; }
+.item.hasthumb.t-family .thumb, .item.hasthumb.t-solo .thumb { width: 100%; height: 58px; }
+.filltools { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin: 8px 0; }
+.sugkey { font-weight: 700; }
 .item b { font-size: 13.5px; line-height: 1.25; overflow-wrap: anywhere; }
 .item span { font-size: 11.5px; color: var(--muted); }
 .item.t-solo { background: color-mix(in srgb, #6b5bd6 16%, var(--paper)); border-color: color-mix(in srgb, #6b5bd6 60%, transparent); }
@@ -240,5 +251,12 @@ details ol { margin: 6px 0; padding-left: 20px; }
   .filters .chip { flex: 0 0 auto; }
   .days, .cards, .legs { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 62px 1fr 1fr; }
+  .thumb { width: 38px; height: 38px; }
+  .item.hasthumb { flex-direction: column; align-items: stretch; gap: 4px; }
+  .item.hasthumb .thumb { width: 100%; height: 48px; }
   .btable th:nth-child(2), .btable td:nth-child(2) { display: none; }
 }
+
+.edphoto { margin: 0 -18px 10px; }
+.edphoto .art { aspect-ratio: 16 / 9; }
+.sugbox { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1.5px dashed var(--line); border-radius: 10px; margin: 8px 0; }

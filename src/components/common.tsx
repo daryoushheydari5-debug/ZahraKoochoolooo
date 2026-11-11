@@ -43,6 +43,29 @@ export function ActivityPhoto({ a, children }: { a: Activity; children?: ReactNo
   );
 }
 
+/** Small square photo for calendar chips: same Commons lookup (and cache) as ActivityPhoto, SVG illustration as fallback. */
+export function Thumb({ a }: { a: Activity }) {
+  const [photo, setPhoto] = useState<Photo | null | undefined>(undefined);
+  const [broken, setBroken] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    let live = true;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") { getPhoto(a.photoQuery).then((p) => live && setPhoto(p)); return () => { live = false; }; }
+    const io = new IntersectionObserver((es) => {
+      if (es.some((e) => e.isIntersecting)) { io.disconnect(); getPhoto(a.photoQuery).then((p) => live && setPhoto(p)); }
+    }, { rootMargin: "400px" });
+    io.observe(el);
+    return () => { live = false; io.disconnect(); };
+  }, [a.photoQuery]);
+  const showPhoto = photo && !broken;
+  return (
+    <span className="thumb" ref={ref} aria-hidden="true" title={showPhoto ? `Photo: ${photo.author.slice(0, 40)} · ${photo.license} · Wikimedia Commons` : undefined}>
+      {showPhoto ? <img src={photo.url} alt="" loading="lazy" draggable={false} onError={() => setBroken(true)} /> : <span className="svgart" dangerouslySetInnerHTML={{ __html: drawScene(a.scene, a.id) }} />}
+    </span>
+  );
+}
+
 /* ---------------- Leaflet map ---------------- */
 export interface Pin { pos: LatLon; label: string; color: string; href?: string; highlight?: boolean; sub?: string }
 export function MapView({ pins, line, height = 280, focus }: { pins: Pin[]; line?: [number, number][]; height?: number; focus?: LatLon }) {

@@ -73,6 +73,12 @@ export interface Activity {
   photoQuery: string; // Wikimedia Commons search term
   flexible?: boolean;
   adultOnly?: boolean;
+  /** Slots it suits best (used by auto-fill). */
+  best?: Slot[];
+  /** Can appear on several days (e.g. snack runs). */
+  repeatable?: boolean;
+  /** Inclusive date ranges when it is usually closed (e.g. New Year), so suggestions avoid them. */
+  closed?: [string, string][];
 }
 
 export interface ScheduleItem {
@@ -85,6 +91,8 @@ export interface ScheduleItem {
   track: Track;
   booked: boolean;
   kind?: "activity" | "travel" | "custom";
+  /** Added by "fill empty slots"; shown as a suggestion until edited. */
+  suggested?: boolean;
 }
 
 export interface BudgetItem {

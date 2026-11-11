@@ -7,7 +7,7 @@ import { SLOTS, TRIP_DAYS, cityOn, stayOn, travelOn, detectConflicts, planMove, 
 import { suggestSwaps } from "../lib/swaps";
 import { isBadOutdoorDay, wxIcon } from "../lib/weather";
 import { fmt, fmtDateTime, isoTodayLocal } from "../lib/dates";
-import { Confirm, WeatherAttribution } from "./common";
+import { Confirm, WeatherAttribution, Thumb, ActivityPhoto } from "./common";
 import type { ScheduleItem, Slot, Track } from "../types";
 
 /** Drop where the finger/pointer is, not where the (possibly wide) dragged chip overlaps. */
@@ -80,11 +80,19 @@ export function Calendar() {
   }
 
   const editingItem = state.schedule.find((i) => i.uid === editing);
+  const suggestedCount = state.schedule.filter((i) => i.suggested).length;
 
   return (
     <section aria-labelledby="cal-h">
       <h2 id="cal-h" className="h2">22-day planner</h2>
       <p className="muted">Drag activities between days and slots (press and hold on a phone), or tap one to edit it. Left column: everyone or the family; right column: Darius solo. Booked items are never moved or overwritten without asking.</p>
+      <div className="filltools">
+        <span className="small"><span className="sugkey">✨ Suggested</span> items are ideas we filled in. Tap one to keep it (it stops being a suggestion), or drag something else over it.</span>
+        <div className="links">
+          <button className="btn sm" onClick={() => { dispatch({ type: "fill" }); flash("Empty slots filled with suggestions. Nothing you planned or booked was changed."); }}>Fill empty slots</button>
+          {suggestedCount > 0 && <button className="btn ghost sm" onClick={() => setPending({ title: "Clear all suggestions?", body: <p>Removes the {suggestedCount} ✨ suggested items you haven't kept. Your own and booked items stay.</p>, run: () => dispatch({ type: "clearSuggestions" }), danger: true, label: "Clear" })}>Clear {suggestedCount} suggestions</button>}
+        </div>
+      </div>
       <DndContext sensors={sensors} collisionDetection={collide} onDragEnd={onDragEnd}>
         <div className="tray" aria-label="Saved for later">
           <b>Saved for later</b>
@@ -172,7 +180,7 @@ function TrayChip({ id, onRemove }: { id: string; onRemove: () => void }) {
   const a = ACT_BY_ID[id];
   return (
     <span ref={setNodeRef} className={"traychip" + (isDragging ? " dragging" : "")} style={transform ? { transform: `translate(${transform.x}px,${transform.y}px)` } : undefined} {...listeners} {...attributes}>
-      {a.weatherSensitive && "☂︎ "}{a.title}
+      <Thumb a={a} />{a.weatherSensitive && "☂︎ "}{a.title}
       <button className="x" onPointerDown={(e) => e.stopPropagation()} onClick={onRemove} aria-label={`Remove ${a.title} from saved`}>×</button>
     </span>
   );
@@ -185,15 +193,18 @@ function ItemChip({ item, bad, conflict, onOpen }: { item: ScheduleItem; bad: bo
   return (
     <div
       ref={setNodeRef}
-      className={`item t-${item.track}${item.booked ? " booked" : ""}${bad ? " bad" : ""}${conflict ? " conflict" : ""}${isDragging ? " dragging" : ""}`}
+      className={`item t-${item.track}${item.suggested ? " sug" : ""}${act ? " hasthumb" : ""}${item.booked ? " booked" : ""}${bad ? " bad" : ""}${conflict ? " conflict" : ""}${isDragging ? " dragging" : ""}`}
       style={{ gridRow: `${slotIndex(item.slot) + 2} / span ${item.span}`, gridColumn: col, transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined }}
       {...listeners} {...attributes}
       onClick={onOpen}
       role="button"
-      aria-label={`${itemTitle(item)}, ${TRACK_LABEL[item.track]}${item.booked ? ", booked" : ""}. Tap to edit, or drag to move.`}
+      aria-label={`${itemTitle(item)}, ${TRACK_LABEL[item.track]}${item.suggested ? ", suggested" : ""}${item.booked ? ", booked" : ""}. Tap to edit, or drag to move.`}
     >
-      <b>{itemTitle(item)}</b>
-      <span>{item.booked && "🔒 Booked · "}{act?.weatherSensitive && "☂︎ weather-sensitive · "}{TRACK_LABEL[item.track]}{bad && " · bad forecast"}</span>
+      {act && <Thumb a={act} />}
+      <span className="itxt">
+        <b>{itemTitle(item)}</b>
+        <span>{item.suggested && "✨ Suggested · "}{item.booked && "🔒 Booked · "}{act?.weatherSensitive && "☂︎ weather-sensitive · "}{TRACK_LABEL[item.track]}{bad && " · bad forecast"}</span>
+      </span>
     </div>
   );
 }
@@ -207,7 +218,16 @@ function ItemEditor({ item, onClose, onMove }: { item: ScheduleItem; onClose: ()
   const changed = date !== item.date || slot !== item.slot || track !== item.track;
   return (
     <Confirm title={itemTitle(item)} confirmLabel={changed ? "Move" : "Done"} onCancel={onClose} onConfirm={() => (changed ? onMove(date, slot, track) : onClose())}>
+      {act && <div className="edphoto"><ActivityPhoto a={act} /></div>}
+      {act && <p className="small">{act.blurb}</p>}
       {act && <p className="small muted">{act.duration} · {act.location.name}</p>}
+      {item.suggested && (
+        <div className="sugbox">
+          <span className="small">✨ This is a suggestion.</span>
+          <button className="btn sm" onClick={() => { dispatch({ type: "setItem", uid: item.uid, patch: { suggested: false } }); onClose(); }}>Keep it</button>
+          <button className="btn ghost sm" onClick={() => { dispatch({ type: "removeItem", uid: item.uid }); onClose(); }}>Remove</button>
+        </div>
+      )}
       <div className="form">
         <label>Day<select value={date} onChange={(e) => setDate(e.target.value)}>{TRIP_DAYS.map((d) => <option key={d} value={d}>{fmt(d, { dow: true })}</option>)}</select></label>
         <label>Slot<select value={slot} onChange={(e) => setSlot(e.target.value as Slot)} disabled={item.span === 3}>{SLOTS.map((s) => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></label>

@@ -2,6 +2,7 @@ import type { BudgetItem, Leg, ScheduleItem, Slot, Track, Currency, TravellerId 
 import { DEFAULT_LEGS, CITY_COLORS } from "../data/trip";
 import { ACT_BY_ID } from "../data/activities";
 import { newUid, planMove, slotIndex } from "../lib/schedule";
+import { fillEmpty } from "../lib/fill";
 
 export interface CarPlan {
   id: string;
@@ -30,6 +31,10 @@ export interface AppState {
   manualRates?: { JPY: number; CNY: number } | null;
   fujiWindow: { from: string; to: string };
   travelMode: Record<string, "drive" | "transit">;
+  /** Suggestions have been filled in once (so a reload doesn't refill slots the user cleared). */
+  filled?: boolean;
+  /** One-time plan updates already applied to a saved plan. */
+  patches?: string[];
 }
 
 const it = (date: string, activityId: string | undefined, slot: Slot, track: Track, extra: Partial<ScheduleItem> = {}): ScheduleItem => {
@@ -42,7 +47,7 @@ export function defaultSchedule(): ScheduleItem[] {
     it("2026-12-20", "maglev", "afternoon", "all"),
     it("2026-12-20", "escape", "evening", "solo"),
     it("2026-12-21", "lsnow", "morning", "all"),
-    it("2026-12-22", "sci", "morning", "all", { span: 2 }),
+    it("2026-12-22", "haichang", "morning", "all", { span: 2 }),
     it("2026-12-23", undefined, "evening", "all", { title: "Pick up rental car near Hakata (3 days)", kind: "custom" }),
     it("2026-12-24", "beppu", "morning", "all"),
     it("2026-12-25", "itoshima", "morning", "all", { span: 2 }),
@@ -70,6 +75,12 @@ export function defaultSchedule(): ScheduleItem[] {
 }
 
 export function defaultState(): AppState {
+  return withSuggestions(baseState());
+}
+function withSuggestions(s: AppState): AppState {
+  return { ...s, schedule: [...s.schedule, ...fillEmpty(s.schedule, s.legs)], filled: true };
+}
+export function baseState(): AppState {
   return {
     v: 1,
     legs: [
@@ -79,6 +90,7 @@ export function defaultState(): AppState {
     ],
     schedule: defaultSchedule(),
     saved: ["paraglide", "icecave", "owakudani", "miraikan", "aso"],
+    patches: ["haichang"],
     favs: ["usj", "tdl", "fuji-view"],
     votes: {},
     budget: [],
@@ -99,6 +111,7 @@ export type Action =
   | { type: "schedule"; activityId?: string; title?: string; date: string; slot: Slot; track: Track; span?: number }
   | { type: "move"; uid: string; date: string; slot: Slot; track?: Track; confirmed?: boolean }
   | { type: "unschedule"; uid: string }
+  | { type: "removeItem"; uid: string }
   | { type: "setItem"; uid: string; patch: Partial<ScheduleItem> }
   | { type: "toggleSaved"; id: string }
   | { type: "toggleFav"; id: string }
@@ -109,6 +122,8 @@ export type Action =
   | { type: "manualRates"; rates: { JPY: number; CNY: number } | null }
   | { type: "fujiWindow"; from: string; to: string }
   | { type: "travelMode"; id: string; mode: "drive" | "transit" }
+  | { type: "fill" }
+  | { type: "clearSuggestions" }
   | { type: "reset" };
 
 /** Pure reducer. Moves never overwrite booked items; displaced unbooked items go to the saved tray. */
@@ -137,17 +152,19 @@ export function reducer(s: AppState, a: Action): AppState {
       const displacedIds = new Set(plan.displaced.map((d) => d.uid));
       const moved = withTrack
         .filter((i) => !displacedIds.has(i.uid))
-        .map((i) => (i.uid === a.uid ? { ...i, date: a.date, slot: i.span === 3 ? "morning" : a.slot } : i));
+        .map((i) => (i.uid === a.uid ? { ...i, suggested: false, date: a.date, slot: i.span === 3 ? "morning" : a.slot } : i));
       const toTray = plan.displaced.map((d) => d.activityId).filter((x): x is string => !!x && !s.saved.includes(x));
       return { ...s, schedule: moved as ScheduleItem[], saved: [...s.saved, ...toTray] };
     }
+    case "removeItem":
+      return { ...s, schedule: s.schedule.filter((i) => i.uid !== a.uid || i.booked) };
     case "unschedule": {
       const cur = s.schedule.find((i) => i.uid === a.uid);
       if (!cur) return s;
       return { ...s, schedule: s.schedule.filter((i) => i.uid !== a.uid), saved: cur.activityId && !s.saved.includes(cur.activityId) ? [...s.saved, cur.activityId] : s.saved };
     }
     case "setItem":
-      return { ...s, schedule: s.schedule.map((i) => (i.uid === a.uid ? { ...i, ...a.patch } : i)) };
+      return { ...s, schedule: s.schedule.map((i) => (i.uid === a.uid ? { ...i, suggested: false, ...a.patch } : i)) };
     case "toggleSaved":
       return { ...s, saved: s.saved.includes(a.id) ? s.saved.filter((x) => x !== a.id) : [...s.saved, a.id] };
     case "toggleFav":
@@ -169,18 +186,42 @@ export function reducer(s: AppState, a: Action): AppState {
       return { ...s, fujiWindow: { from: a.from, to: a.to } };
     case "travelMode":
       return { ...s, travelMode: { ...s.travelMode, [a.id]: a.mode } };
+    case "fill":
+      return withSuggestions(s);
+    case "clearSuggestions":
+      return { ...s, schedule: s.schedule.filter((i) => !i.suggested || i.booked) };
     case "reset":
       return defaultState();
   }
 }
 
 const KEY = "aa.state.v1";
+/** Darius asked (11 Nov) for Haichang Ocean Park: put it on 22 Dec in plans saved before then, without touching anything booked. */
+export function applyPatches(s: AppState): AppState {
+  const done = s.patches ?? [];
+  if (done.includes("haichang")) return s;
+  let st: AppState = { ...s, patches: [...done, "haichang"] };
+  if (st.schedule.some((i) => i.activityId === "haichang")) return st;
+  const d = "2026-12-22";
+  const inWay = st.schedule.filter((i) => i.date === d && i.track !== "solo" && (i.slot === "morning" || i.slot === "afternoon"));
+  if (inWay.some((i) => i.booked)) return { ...st, saved: st.saved.includes("haichang") ? st.saved : [...st.saved, "haichang"] };
+  const back = inWay.filter((i) => !i.suggested && i.activityId).map((i) => i.activityId!);
+  st = {
+    ...st,
+    schedule: [...st.schedule.filter((i) => !inWay.includes(i)), { uid: "d-2026-12-22-haichang", activityId: "haichang", date: d, slot: "morning", span: 2, track: "all", booked: false, kind: "activity" }],
+    saved: [...st.saved, ...back.filter((x) => !st.saved.includes(x))],
+  };
+  return st;
+}
 export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const p = JSON.parse(raw);
-      if (p && p.v === 1 && Array.isArray(p.legs) && Array.isArray(p.schedule)) return { ...defaultState(), ...p };
+      if (p && p.v === 1 && Array.isArray(p.legs) && Array.isArray(p.schedule)) {
+        const st: AppState = applyPatches({ ...baseState(), ...p });
+        return st.filled ? st : withSuggestions(st); // one-time fill for plans saved before suggestions existed
+      }
     }
   } catch { /* ignore corrupt storage */ }
   return defaultState();
