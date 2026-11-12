@@ -11,11 +11,11 @@ export const TRAVELLERS: Traveller[] = [
 ];
 
 export const CITY_COLORS: Record<CityId | "stop", string> = {
-  sha: "#d1343f",
-  fuk: "#0b8f84",
-  osa: "#d46a00",
-  tok: "#2f7d33",
-  stop: "#6b5bd6",
+  sha: "#ff3b5c",
+  fuk: "#19e3c4",
+  osa: "#ff9a1f",
+  tok: "#b14dff",
+  stop: "#4d8cff",
 };
 
 export const CITY_NAMES: Record<CityId, string> = { sha: "Shanghai", fuk: "Fukuoka", osa: "Osaka", tok: "Tokyo" };
