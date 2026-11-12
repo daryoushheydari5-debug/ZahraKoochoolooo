@@ -1,6 +1,7 @@
 import { addDays, diffDays, parseISO, dateRange } from "./dates";
 import { validateLegs, detectConflicts, planMove, cityOn, travelOn, TRIP_DAYS } from "./schedule";
-import { defaultState, reducer, budgetLines } from "../state/store";
+import { defaultState as blankState, reducer, budgetLines, applyPatches } from "../state/store";
+import { starterState as defaultState } from "../test-fixtures";
 import { scoreFujiDay, rankFujiDays, fetchForecast, type ForecastResponse } from "./weather";
 import { convert, fetchRates, isStale } from "./fx";
 import { parseCommons } from "./photos";
@@ -214,5 +215,19 @@ describe("weather swaps", () => {
     expect(fish.moveTo).toBeDefined();
     expect(fish.indoorAlt!.length).toBeGreaterThan(0);
     expect(swaps.some((x) => x.date === "2026-12-30")).toBe(false);
+  });
+});
+
+describe("blank plan", () => {
+  it("starts with nothing planned", () => {
+    expect(blankState().schedule).toEqual([]);
+  });
+  it("clears an older saved plan once, but keeps anything booked", () => {
+    const old = defaultState();
+    const booked = { ...old, patches: undefined, schedule: old.schedule.map((i) => (i.activityId === "usj" ? { ...i, booked: true } : i)) };
+    const s = applyPatches(booked);
+    expect(s.schedule.map((i) => i.activityId)).toEqual(["usj"]);
+    expect(s.legs.some((l) => l.optional)).toBe(false);
+    expect(applyPatches(s)).toBe(s);
   });
 });

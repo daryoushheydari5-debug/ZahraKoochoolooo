@@ -1,7 +1,8 @@
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { useReducer, type ReactNode } from "react";
 import { StoreCtx } from "../state/hooks";
-import { defaultState, reducer, type AppState } from "../state/store";
+import { reducer, type AppState } from "../state/store";
+import { starterState as defaultState } from "../test-fixtures";
 import { FujiPlanner } from "./FujiPlanner";
 import { Money } from "./Money";
 import { RoutePanel } from "./RoutePanel";
