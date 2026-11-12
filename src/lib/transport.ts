@@ -46,6 +46,9 @@ export function carOn(date: string, cars: CarPlan[]): CarPlan | null {
 
 /** Specific, checked-by-hand directions for places where "take the train" isn't enough. */
 const ROUTES: Record<string, string> = {
+  takachiho: "Drive about 3 hours each way via Kumamoto (rental car). No easy train.",
+  yufuinfloral: "Drive 1h40 (122 km, tolls) via the Kyushu and Oita expressways, or about 2 hours by train to Yufuin.",
+  midorinouta: "Drive: it's out of the city in the forest. Use the rental car and check the map listing for the exact spot.",
   usj: "Walk about 10 minutes: the hotel is in Universal City.",
   tdl: "JR Keiyo Line to Maihama, about 40 minutes from the apartment.",
   maglev: "Ride it from Pudong Airport when you land: follow the Maglev signs after customs.",
@@ -63,6 +66,9 @@ const ROUTES: Record<string, string> = {
   paraglide: "Drive or highway bus to Lake Kawaguchi; the operator meets you nearby.",
 };
 
+/** Places whose map pin is a rough guess: route to the name instead. */
+const APPROX_POS = new Set(["midorinouta"]);
+
 export interface GetThere { how: string; url: string; mode: "walk" | "transit" | "driving" }
 
 /** Best way to reach an activity from where you're sleeping that day. */
@@ -76,7 +82,8 @@ export function getThere(a: Activity, date: string | undefined, legs: Leg[], car
   // Directions start at the hotel's own address when we only know roughly where it is.
   const gdir = (f: { lat: number; lon: number }, t: { lat: number; lon: number }, mode: "driving" | "transit") => {
     const u = gdirExact(f, t, mode);
-    return stay && !stay.posExact ? u.replace(/origin=[^&]*/, "origin=" + encodeURIComponent(stay.mapsQuery)) : u;
+    const v = APPROX_POS.has(a.id) ? u.replace(/destination=[^&]*/, "destination=" + encodeURIComponent(a.location.query)) : u;
+    return stay && !stay.posExact ? v.replace(/origin=[^&]*/, "origin=" + encodeURIComponent(stay.mapsQuery)) : v;
   };
   if (ROUTES[a.id]) return { how: ROUTES[a.id], url: gdir(from, to, car ? "driving" : "transit"), mode: car ? "driving" : "transit" };
   if (car && km > 2) return { how: `Drive: you have the rental car that day (about ${Math.round(km)} km). Check parking before you go.`, url: gdir(from, to, "driving"), mode: "driving" };
