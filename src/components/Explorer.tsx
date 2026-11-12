@@ -8,19 +8,29 @@ import { ActivityPhoto } from "./common";
 import { ActivityDetail, costText } from "./ActivityDetail";
 import type { Activity, CityId } from "../types";
 
+const TYPES: { id: string; label: string; tags: string[] }[] = [
+  { id: "thrills", label: "🎢 Thrills & parks", tags: ["theme park", "adrenaline", "rides"] },
+  { id: "hands", label: "🙌 Hands-on", tags: ["hands-on", "interactive", "food", "craft"] },
+  { id: "animals", label: "🐧 Animals", tags: ["animals"] },
+  { id: "snow", label: "❄️ Snow & hot springs", tags: ["snow", "onsen", "winter"] },
+  { id: "night", label: "🌃 Night & lights", tags: ["night", "illumination", "neon"] },
+  { id: "tech", label: "🤖 Tech, games & trains", tags: ["technology", "trains", "arcade"] },
+];
+
 /** Browse ideas with photos. Nothing goes on the plan until you press "Add to our plan". */
 export function Explorer({ city: initialCity = "all" }: { city?: CityId | "all" }) {
   const { state } = useStore();
   const [city, setCity] = useState<CityId | "all">(initialCity);
   const [q, setQ] = useState("");
+  const [type, setType] = useState<string>("all");
   const [open, setOpen] = useState<{ a: Activity; add?: boolean } | null>(null);
 
   const list = useMemo(() => {
     const ql = q.trim().toLowerCase();
     return ALL_ACTIVITIES
-      .filter((a) => (city === "all" || a.city === city) && (!ql || (a.title + a.blurb + a.tags.join(" ") + a.location.name).toLowerCase().includes(ql)))
+      .filter((a) => (city === "all" || a.city === city) && (type === "all" || TYPES.find((t) => t.id === type)!.tags.some((t) => a.tags.includes(t))) && (!ql || (a.title + a.blurb + a.tags.join(" ") + a.location.name).toLowerCase().includes(ql)))
       .sort((a, b) => b.score - a.score);
-  }, [city, q]);
+  }, [city, q, type]);
 
   return (
     <section aria-labelledby="ex-h">
@@ -34,6 +44,11 @@ export function Explorer({ city: initialCity = "all" }: { city?: CityId | "all" 
             </button>
           ))}
         </div>
+        <div className="chips" role="group" aria-label="Type">
+          <button className="chip sm" aria-pressed={type === "all"} onClick={() => setType("all")}>All types</button>
+          {TYPES.map((t) => <button key={t.id} className="chip sm" aria-pressed={type === t.id} onClick={() => setType(t.id)}>{t.label}</button>)}
+        </div>
+        <p className="small muted">{list.length} ideas</p>
         <input type="search" placeholder="Search, e.g. snow, onsen, robots…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search activities" />
       </div>
 

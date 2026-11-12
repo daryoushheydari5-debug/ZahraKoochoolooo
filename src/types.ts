@@ -17,6 +17,13 @@ export interface Stay {
   mapsQuery: string;
   nightlyAud?: number; // estimate, both rooms
   note?: string;
+  /** Entered by the group: what they actually paid in total. */
+  cost?: { amount: number; currency: Currency };
+  /** "halves": Darius's room and the couple's room, half each. "thirds": split by 3 adults. */
+  split?: "halves" | "thirds";
+  ref?: string;
+  /** true when pos is the hotel itself rather than the city centre. */
+  posExact?: boolean;
 }
 
 /** One leg of the route. Dates are ISO yyyy-mm-dd, nights = depart - arrive. */

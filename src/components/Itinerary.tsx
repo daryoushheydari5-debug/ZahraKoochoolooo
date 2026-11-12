@@ -7,6 +7,7 @@ import { diffDays, parseISO } from "../lib/dates";
 import { hopsFor, carOn, googleWeather, bookingNeed } from "../lib/transport";
 import { ActivityDetail, SLOT_NAME, WHO } from "./ActivityDetail";
 import { Thumb, Ext } from "./common";
+import { HotelForm } from "./Hotels";
 import type { CityId, ScheduleItem } from "../types";
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,6 +17,7 @@ const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct
 export function Itinerary({ goExplore, goBook }: { goExplore: (city?: CityId) => void; goBook: () => void }) {
   const { state } = useStore();
   const [open, setOpen] = useState<string | null>(null);
+  const [hotelFor, setHotelFor] = useState<string | null>(null);
   const hops = hopsFor(state.legs);
   const picked = state.schedule.filter((i) => i.activityId && ACT_BY_ID[i.activityId]);
   const toBook = picked.filter((i) => !i.booked && bookingNeed(ACT_BY_ID[i.activityId!]).ahead).length;
@@ -49,7 +51,10 @@ export function Itinerary({ goExplore, goBook }: { goExplore: (city?: CityId) =>
             <header className="cityhead">
               <div>
                 <h3>{CITY_NAMES[b.city]}</h3>
-                <p className="small">{range(b.days)} · {nights} night{nights === 1 ? "" : "s"}{leg?.stay ? <> · 🛏️ {leg.stay.name} <span className={"pill " + (leg.stayBooked ? "ok" : "todo")}>{leg.stayBooked ? "Booked" : "Not booked"}</span></> : null}</p>
+                <p className="small">{range(b.days)} · {nights} night{nights === 1 ? "" : "s"}</p>
+                {leg && (leg.stay
+                  ? <p className="hotelline">🛏️ <b>{leg.stay.name}</b> <span className={"pill " + (leg.stayBooked ? "ok" : "todo")}>{leg.stayBooked ? "Booked" : "Not booked"}</span> <button className="linkbtn" onClick={() => setHotelFor(leg.id)}>Edit</button></p>
+                  : <button className="btn sm ghost addhotel" onClick={() => setHotelFor(leg.id)}>🛏️ Add our hotel</button>)}
               </div>
               <Ext className="btn sm ghost" href={googleWeather(CITY_NAMES[b.city])}>☁️ Weather ↗</Ext>
             </header>
@@ -80,6 +85,7 @@ export function Itinerary({ goExplore, goBook }: { goExplore: (city?: CityId) =>
           </div>
         );
       })}
+      {hotelFor && state.legs.find((l) => l.id === hotelFor) && <HotelForm leg={state.legs.find((l) => l.id === hotelFor)!} onClose={() => setHotelFor(null)} />}
       {openItem?.activityId && <ActivityDetail a={ACT_BY_ID[openItem.activityId]} item={openItem} onClose={() => setOpen(null)} />}
     </section>
   );

@@ -32,6 +32,8 @@ export interface AppState {
   travelMode: Record<string, "drive" | "transit">;
   /** Ticked items on the "To book" list that aren't stays or activities (flights, trains, documents). */
   done?: Record<string, boolean>;
+  /** Spending money in AUD: Darius on his own, Zaynab & Ruhullah sharing one budget. */
+  budgets?: { darius: number; couple: number };
   /** One-time plan updates already applied to a saved plan. */
   patches?: string[];
 }
@@ -53,7 +55,8 @@ export function baseState(): AppState {
     ],
     schedule: defaultSchedule(),
     saved: [],
-    patches: ["haichang", "blank"],
+    patches: ["haichang", "blank", "nohotels"],
+    budgets: { darius: 4000, couple: 5000 },
     done: {},
     favs: ["usj", "tdl", "fuji-view"],
     votes: {},
@@ -86,6 +89,7 @@ export type Action =
   | { type: "fujiWindow"; from: string; to: string }
   | { type: "travelMode"; id: string; mode: "drive" | "transit" }
   | { type: "toggleDone"; id: string }
+  | { type: "setBudgets"; budgets: { darius: number; couple: number } }
   | { type: "reset" };
 
 /** Pure reducer. Moves never overwrite booked items; displaced unbooked items go to the saved tray. */
@@ -148,6 +152,8 @@ export function reducer(s: AppState, a: Action): AppState {
       return { ...s, fujiWindow: { from: a.from, to: a.to } };
     case "travelMode":
       return { ...s, travelMode: { ...s.travelMode, [a.id]: a.mode } };
+    case "setBudgets":
+      return { ...s, budgets: a.budgets };
     case "toggleDone":
       return { ...s, done: { ...s.done, [a.id]: !s.done?.[a.id] } };
     case "reset":
@@ -158,6 +164,7 @@ export function reducer(s: AppState, a: Action): AppState {
 const KEY = "aa.state.v1";
 /** 12 Nov: Darius asked for a blank plan that only fills from Explore. Clears suggestions and starter picks once; anything marked booked stays. */
 export function applyPatches(s: AppState): AppState {
+  s = clearStarterHotels(s);
   const done = s.patches ?? [];
   if (done.includes("blank")) return s;
   return {
@@ -166,6 +173,17 @@ export function applyPatches(s: AppState): AppState {
     legs: s.legs.filter((l) => !l.optional || l.stayBooked),
     cars: s.cars.filter((c) => c.id !== "car-tok"),
     patches: [...done, "blank"],
+  };
+}
+const STARTER_HOTELS = ["homeinn-pujian", "at-hakata", "lagent-osaka-bay", "tokyo-east-apartment"];
+/** 12 Nov: Darius will add the hotels they actually booked, so the example hotels go (unless ticked as booked). */
+function clearStarterHotels(s: AppState): AppState {
+  const done = s.patches ?? [];
+  if (done.includes("nohotels")) return s;
+  return {
+    ...s,
+    legs: s.legs.map((l) => (l.stay && STARTER_HOTELS.includes(l.stay.id) && !l.stayBooked ? { ...l, stay: undefined } : l)),
+    patches: [...done, "nohotels"],
   };
 }
 export function loadState(): AppState {
@@ -193,7 +211,15 @@ export function budgetLines(s: AppState): BudgetLine[] {
   const lines: BudgetLine[] = [];
   for (const l of s.legs) {
     const nights = Math.max(0, Math.round((Date.parse(l.depart) - Date.parse(l.arrive)) / 86400000));
-    if (l.stay?.nightlyAud && nights) lines.push({ id: "acc-" + l.id, label: `${l.stay.name} · ${nights} nights`, category: "accommodation", amount: l.stay.nightlyAud * nights, currency: "AUD", estimate: !l.stayBooked, sharedBy: ADULTS, auto: true });
+    const st = l.stay;
+    const amt = st?.cost ?? (st?.nightlyAud && nights ? { amount: st.nightlyAud * nights, currency: "AUD" as Currency } : null);
+    if (!st || !amt) continue;
+    const label = `${st.name} · ${nights} night${nights === 1 ? "" : "s"}`;
+    if (st.split === "thirds") lines.push({ id: "acc-" + l.id, label, category: "accommodation", amount: amt.amount, currency: amt.currency, estimate: !st.cost, sharedBy: ADULTS, auto: true });
+    else {
+      lines.push({ id: "acc-" + l.id + "-d", label: label + " (Darius's room, half)", category: "accommodation", amount: amt.amount / 2, currency: amt.currency, estimate: !st.cost, sharedBy: ["darius"], auto: true });
+      lines.push({ id: "acc-" + l.id + "-c", label: label + " (Zaynab & Ruhullah's room, half)", category: "accommodation", amount: amt.amount / 2, currency: amt.currency, estimate: !st.cost, sharedBy: ["sister", "husband"], auto: true });
+    }
   }
   for (const c of s.cars) {
     const sb = ADULTS;
@@ -207,7 +233,7 @@ export function budgetLines(s: AppState): BudgetLine[] {
     if (!act || act.cost.amount == null) continue;
     const who: TravellerId[] = i.track === "solo" ? ["darius"] : i.track === "family" ? ["sister", "husband"] : ADULTS;
     const amount = act.cost.basis === "per-adult" ? act.cost.amount * who.length : act.cost.amount;
-    lines.push({ id: "tix-" + i.uid, label: `${act.title} (${i.track === "solo" ? "Darius" : i.track === "family" ? "sister & husband" : "3 adults"})`, category: "tickets", amount, currency: act.cost.currency, estimate: act.cost.status !== "verified", sharedBy: who, auto: true });
+    lines.push({ id: "tix-" + i.uid, label: `${act.title} (${i.track === "solo" ? "Darius" : i.track === "family" ? "Zaynab & Ruhullah" : "3 adults"})`, category: "tickets", amount, currency: act.cost.currency, estimate: act.cost.status !== "verified", sharedBy: who, auto: true });
   }
   for (const b of s.budget) lines.push({ id: b.id, label: b.label, category: b.category, amount: b.amount, currency: b.currency, estimate: b.estimate, sharedBy: b.split === "individual" && b.person ? [b.person] : b.sharedBy ?? ADULTS, auto: false });
   return lines;

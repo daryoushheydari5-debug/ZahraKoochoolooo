@@ -3,19 +3,22 @@ import { useStore } from "../state/hooks";
 import { ACT_BY_ID } from "../data/activities";
 import { CITY_NAMES, bookingSearchUrl } from "../data/trip";
 import { fmt, diffDays, addDays } from "../lib/dates";
+import { money } from "../lib/fx";
 import { hopsFor, bookingNeed } from "../lib/transport";
 import { ActivityDetail, costText } from "./ActivityDetail";
 import { Ext, Thumb } from "./common";
+import { HotelForm } from "./Hotels";
 import type { Activity, ScheduleItem } from "../types";
 
 const google = (q: string) => "https://www.google.com/search?q=" + encodeURIComponent(q);
 
-interface Row { id: string; when: string; what: ReactNode; detail: ReactNode; cost: string; link?: { label: string; url: string }; done: boolean; toggle: () => void; thumb?: Activity; open?: () => void }
+interface Row { button?: { label: string; onClick: () => void }; id: string; when: string; what: ReactNode; detail: ReactNode; cost: string; link?: { label: string; url: string }; done: boolean; toggle: () => void; thumb?: Activity; open?: () => void }
 
 /** Everything to sort before the trip, like a quote: one line each, ticked off as it's done. */
 export function Checklist({ goExplore }: { goExplore: () => void }) {
   const { state, dispatch } = useStore();
   const [open, setOpen] = useState<ScheduleItem | null>(null);
+  const [hotelFor, setHotelFor] = useState<string | null>(null);
   const done = state.done ?? {};
   const tick = (id: string) => () => dispatch({ type: "toggleDone", id });
 
@@ -27,9 +30,11 @@ export function Checklist({ goExplore }: { goExplore: () => void }) {
   const stays: Row[] = [...state.legs].sort((a, b) => a.arrive.localeCompare(b.arrive)).map((l) => {
     const n = diffDays(l.arrive, l.depart);
     return {
-      id: l.id, when: `${fmt(l.arrive)} – ${fmt(l.depart)}`, what: <>🛏️ {l.stay?.name ?? l.name}</>, detail: <>{l.city !== "stop" ? CITY_NAMES[l.city] : l.name} · {n} night{n === 1 ? "" : "s"}{l.stay?.note && <span className="muted"> · {l.stay.note}</span>}</>,
-      cost: l.stay?.nightlyAud ? `About A$${Math.round(l.stay.nightlyAud * n)}` : "",
-      link: l.stay ? { label: l.stay.bookingLabel, url: l.stay.bookingUrl } : { label: "Search stays", url: bookingSearchUrl(l.name, l.arrive, l.depart) },
+      id: l.id, when: `${fmt(l.arrive)} – ${fmt(l.depart)}`, what: <>🛏️ {l.stay?.name ?? `${l.city !== "stop" ? CITY_NAMES[l.city] : l.name}: no hotel added yet`}</>,
+      detail: <>{l.city !== "stop" ? CITY_NAMES[l.city] : l.name} · {n} night{n === 1 ? "" : "s"}{l.stay?.ref && <> · Confirmation {l.stay.ref}</>}{l.stay?.area && <span className="muted"> · {l.stay.area}</span>}</>,
+      cost: l.stay?.cost ? money(l.stay.cost.amount, l.stay.cost.currency) : "",
+      link: l.stay ? { label: l.stay.bookingLabel, url: l.stay.bookingUrl } : { label: "Search hotels", url: bookingSearchUrl(l.city !== "stop" ? CITY_NAMES[l.city] : l.name, l.arrive, l.depart) },
+      button: { label: l.stay ? "Edit" : "Add our hotel", onClick: () => setHotelFor(l.id) },
       done: l.stayBooked, toggle: () => dispatch({ type: "setLeg", id: l.id, patch: { stayBooked: !l.stayBooked } }),
     };
   });
@@ -73,6 +78,7 @@ export function Checklist({ goExplore }: { goExplore: () => void }) {
       <Table title="Before we go" rows={docs} />
       <Table title="Activities to book ahead" rows={ahead} empty={<>Nothing yet. Activities you add from <button className="linkbtn" onClick={goExplore}>Explore</button> that need tickets show up here.</>} />
       {onDay.length > 0 && <Table title="Pay on the day (no booking needed)" rows={onDay} noTick />}
+      {hotelFor && state.legs.find((l) => l.id === hotelFor) && <HotelForm leg={state.legs.find((l) => l.id === hotelFor)!} onClose={() => setHotelFor(null)} />}
       {openNow?.activityId && <ActivityDetail a={ACT_BY_ID[openNow.activityId]} item={openNow} onClose={() => setOpen(null)} />}
     </section>
   );
@@ -96,6 +102,7 @@ function Table({ title, note, rows, empty, noTick }: { title: string; note?: str
               </div>
               <div className="lineside">
                 {r.cost && <span className="cost">{r.cost}</span>}
+                {r.button && <button className="btn sm ghost" onClick={r.button.onClick}>{r.button.label}</button>}
                 {r.link && <Ext className={"btn sm " + (r.done ? "ghost" : "primary")} href={r.link.url}>{r.link.label} ↗</Ext>}
                 <span className={"pill " + (r.done ? "ok" : noTick ? "" : "todo")}>{r.done ? "Done" : noTick ? "On the day" : "To do"}</span>
               </div>

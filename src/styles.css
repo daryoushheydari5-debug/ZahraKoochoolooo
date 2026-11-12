@@ -405,3 +405,19 @@ input[type="search"], select, input[type="date"], input[type="number"], input[ty
 @media (prefers-reduced-motion: no-preference) {
   .btn.primary, .tabs button[aria-selected="true"] { transition: box-shadow 0.2s; }
 }
+
+.hotelline { margin: 4px 0 0; font-size: 14px; }
+.cityhead .hotelline { color: var(--ink); }
+.addhotel { margin-top: 6px; border-style: dashed; }
+.budgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 8px 0 18px; }
+.budget { background: var(--paper); border: 1.5px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+.budget h3 { margin: 0; font-family: var(--display); font-weight: 400; text-transform: uppercase; letter-spacing: 0.02em; font-size: 18px; }
+.budget .big { font-family: var(--display); font-size: 30px; line-height: 1.1; margin: 6px 0 2px; }
+.budget .big.left { color: var(--ok); text-shadow: 0 0 12px rgba(61, 255, 168, 0.45); }
+.budget .big.over { color: var(--bad); text-shadow: 0 0 12px rgba(255, 77, 94, 0.5); }
+.budget .bar { height: 10px; border-radius: 999px; background: var(--soft); overflow: hidden; margin: 10px 0 6px; }
+.budget .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--accent)); box-shadow: 0 0 10px var(--accent); }
+.budget .bar i.over { background: var(--bad); }
+.budget label { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.budget input { width: 110px; }
+.budget .bar { width: 100%; display: block; }

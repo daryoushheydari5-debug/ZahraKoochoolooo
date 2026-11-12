@@ -5,8 +5,8 @@ export const TRIP_END = "2027-01-10"; // inclusive, 22 days
 
 export const TRAVELLERS: Traveller[] = [
   { id: "darius", name: "Darius", age: 25, adult: true },
-  { id: "sister", name: "Sister", age: 32, adult: true },
-  { id: "husband", name: "Brother-in-law", age: 32, adult: true },
+  { id: "sister", name: "Zaynab", age: 32, adult: true },
+  { id: "husband", name: "Ruhullah", age: 32, adult: true },
   { id: "baby", name: "Baby (1)", age: 1, adult: false },
 ];
 
@@ -75,10 +75,10 @@ export const STAYS: Record<CityId, Stay> = {
 };
 
 export const DEFAULT_LEGS: Leg[] = [
-  { id: "leg-sha", city: "sha", name: "Shanghai", arrive: "2026-12-20", depart: "2026-12-23", stay: STAYS.sha, stayBooked: false, color: CITY_COLORS.sha },
-  { id: "leg-fuk", city: "fuk", name: "Fukuoka", arrive: "2026-12-23", depart: "2026-12-26", stay: STAYS.fuk, stayBooked: false, color: CITY_COLORS.fuk },
-  { id: "leg-osa", city: "osa", name: "Osaka", arrive: "2026-12-26", depart: "2026-12-29", stay: STAYS.osa, stayBooked: false, color: CITY_COLORS.osa },
-  { id: "leg-tok", city: "tok", name: "Tokyo", arrive: "2026-12-29", depart: "2027-01-10", stay: STAYS.tok, stayBooked: false, color: CITY_COLORS.tok },
+  { id: "leg-sha", city: "sha", name: "Shanghai", arrive: "2026-12-20", depart: "2026-12-23", stayBooked: false, color: CITY_COLORS.sha },
+  { id: "leg-fuk", city: "fuk", name: "Fukuoka", arrive: "2026-12-23", depart: "2026-12-26", stayBooked: false, color: CITY_COLORS.fuk },
+  { id: "leg-osa", city: "osa", name: "Osaka", arrive: "2026-12-26", depart: "2026-12-29", stayBooked: false, color: CITY_COLORS.osa },
+  { id: "leg-tok", city: "tok", name: "Tokyo", arrive: "2026-12-29", depart: "2027-01-10", stayBooked: false, color: CITY_COLORS.tok },
 ];
 
 /** Booking.com search for a leg, pre-filled with its dates, 3 adults + 1 infant, 2 rooms. */

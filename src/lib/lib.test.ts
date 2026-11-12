@@ -107,7 +107,11 @@ describe("calendar conflicts and moves", () => {
 
 describe("budget", () => {
   it("includes accommodation, both rental cars, fuel, tolls, parking and tickets", () => {
-    const lines = budgetLines(defaultState());
+    const st = defaultState();
+    st.legs = st.legs.map((l) => (l.id === "leg-sha" ? { ...l, stayBooked: true, stay: { id: "own", name: "Our Shanghai hotel", area: "", pos: { lat: 31.2, lon: 121.5 }, bookingUrl: "", bookingLabel: "", mapsQuery: "x", cost: { amount: 300, currency: "AUD" as const }, split: "halves" as const } } : l));
+    const lines = budgetLines(st);
+    const acc = lines.filter((l) => l.category === "accommodation");
+    expect(acc.map((l) => [l.amount, l.sharedBy])).toEqual([[150, ["darius"]], [150, ["sister", "husband"]]]);
     const cats = new Set(lines.map((l) => l.category));
     for (const c of ["accommodation", "rental car", "fuel", "tolls", "parking", "tickets"]) expect(cats.has(c as never)).toBe(true);
     const fukCar = lines.find((l) => l.id === "car-fuk-rent")!;

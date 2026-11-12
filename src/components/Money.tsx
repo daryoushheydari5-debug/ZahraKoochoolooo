@@ -22,7 +22,7 @@ export function Money() {
   const perPerson: Record<TravellerId, number> = { darius: 0, sister: 0, husband: 0, baby: 0 };
   let total = 0, shared = 0, individual = 0;
   for (const l of lines) {
-    const a = toAud(l.amount, l.currency);
+    const a0 = toAud(l.amount, l.currency), a = Number.isFinite(a0) ? a0 : 0;
     total += a;
     byCat.set(l.category, (byCat.get(l.category) ?? 0) + a);
     if (l.sharedBy.length > 1) shared += a; else individual += a;
@@ -34,6 +34,7 @@ export function Money() {
   return (
     <section aria-labelledby="money-h">
       <h2 id="money-h" className="h2">Money</h2>
+      <Budgets planned={{ darius: perPerson.darius, couple: perPerson.sister + perPerson.husband }} haveRates={!!r} />
       <div className="fx">
         <h3>AUD / JPY / CNY converter</h3>
         <div className="fxrow">
@@ -137,5 +138,35 @@ function AddCost() {
       <label className="check"><input type="checkbox" checked={!f.estimate} onChange={(e) => setF({ ...f, estimate: !e.target.checked })} /> Confirmed price</label>
       <button className="btn primary" disabled={!valid}>Add</button>
     </form>
+  );
+}
+
+/** The two spending pots: Darius on his own, and Zaynab & Ruhullah sharing one. */
+function Budgets({ planned, haveRates }: { planned: { darius: number; couple: number }; haveRates: boolean }) {
+  const { state, dispatch } = useStore();
+  const b = state.budgets ?? { darius: 4000, couple: 5000 };
+  const card = (key: "darius" | "couple", title: string) => {
+    const used = Number.isFinite(planned[key]) ? planned[key] : 0;
+    const left = b[key] - used;
+    const pct = b[key] > 0 ? Math.min(100, (used / b[key]) * 100) : 0;
+    return (
+      <div className="budget">
+        <h3>{title}</h3>
+        <div className={"big " + (left < 0 ? "over" : "left")}>{money(Math.abs(left), "AUD")}</div>
+        <div className="small">{left < 0 ? "over budget" : "left to spend"}</div>
+        <div className="bar"><i className={left < 0 ? "over" : ""} style={{ width: pct + "%" }} /></div>
+        <div className="small muted">{money(used, "AUD")} planned so far (hotels, car, tickets and costs below)</div>
+        <label>Budget A$<input type="number" min={0} step={100} value={b[key]} onChange={(e) => dispatch({ type: "setBudgets", budgets: { ...b, [key]: Math.max(0, +e.target.value) } })} /></label>
+      </div>
+    );
+  };
+  return (
+    <>
+      <div className="budgets">
+        {card("darius", "Darius")}
+        {card("couple", "Zaynab & Ruhullah (shared)")}
+      </div>
+      {!haveRates && <p className="warn small">Yen and yuan costs aren't counted until an exchange rate loads (or you enter one below).</p>}
+    </>
   );
 }

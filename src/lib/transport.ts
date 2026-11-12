@@ -1,6 +1,6 @@
 import type { Activity, CityId, Leg } from "../types";
 import type { CarPlan } from "../state/store";
-import { CITY_NAMES, STAYS, gdir } from "../data/trip";
+import { CITY_NAMES, CITY_POS, gdir, gdir as gdirExact } from "../data/trip";
 import { addDays } from "./dates";
 import { stayOn } from "./schedule";
 
@@ -31,7 +31,7 @@ export function hopsFor(legs: Leg[]): Hop[] {
   if (start) out.push({ id: `start-${first.city}`, date: first.arrive, ...start });
   for (let i = 0; i < main.length - 1; i++) {
     const k = `${main[i].city}-${main[i + 1].city}`;
-    const h = HOPS[k] ?? { icon: "🚆", title: `${main[i].name} → ${main[i + 1].name}`, how: "Check Google Maps for trains or flights", time: "", cost: "", bookLabel: "Directions", bookUrl: gdir(STAYS[main[i].city as CityId].pos, STAYS[main[i + 1].city as CityId].pos, "transit") };
+    const h = HOPS[k] ?? { icon: "🚆", title: `${main[i].name} → ${main[i + 1].name}`, how: "Check Google Maps for trains or flights", time: "", cost: "", bookLabel: "Directions", bookUrl: gdir(CITY_POS[main[i].city as CityId], CITY_POS[main[i + 1].city as CityId], "transit") };
     out.push({ id: k, date: main[i].depart, ...h });
   }
   const end = HOPS[`end-${last.city}`];
@@ -67,17 +67,23 @@ export interface GetThere { how: string; url: string; mode: "walk" | "transit" |
 
 /** Best way to reach an activity from where you're sleeping that day. */
 export function getThere(a: Activity, date: string | undefined, legs: Leg[], cars: CarPlan[]): GetThere {
-  const leg = date ? stayOn(date, legs) : null;
-  const from = leg?.stay?.pos ?? STAYS[a.city].pos;
+  const leg = date ? stayOn(date, legs) : legs.find((l) => !l.optional && l.city === a.city) ?? null;
+  const stay = leg?.stay;
+  const from = stay?.pos ?? CITY_POS[a.city];
   const to = a.location.pos;
   const car = date ? carOn(date, cars) : null;
   const km = distKm(from, to);
+  // Directions start at the hotel's own address when we only know roughly where it is.
+  const gdir = (f: { lat: number; lon: number }, t: { lat: number; lon: number }, mode: "driving" | "transit") => {
+    const u = gdirExact(f, t, mode);
+    return stay && !stay.posExact ? u.replace(/origin=[^&]*/, "origin=" + encodeURIComponent(stay.mapsQuery)) : u;
+  };
   if (ROUTES[a.id]) return { how: ROUTES[a.id], url: gdir(from, to, car ? "driving" : "transit"), mode: car ? "driving" : "transit" };
   if (car && km > 2) return { how: `Drive: you have the rental car that day (about ${Math.round(km)} km). Check parking before you go.`, url: gdir(from, to, "driving"), mode: "driving" };
-  if (km < 1.3) return { how: `Walk: about ${Math.max(5, Math.round(km * 13))} minutes from where you're staying.`, url: gdir(from, to, "transit").replace("travelmode=transit", "travelmode=walking"), mode: "walk" };
+  if (km < 1.3) return { how: `${stay ? "Walk" : "Probably a walk"}: about ${Math.max(5, Math.round(km * 13))} minutes${stay ? " from your hotel" : ""}.`, url: gdir(from, to, "transit").replace("travelmode=transit", "travelmode=walking"), mode: "walk" };
   const mins = Math.round((km / 22) * 60 + 15);
   const kind = a.city === "sha" ? "Metro or a DiDi taxi" : "Train or subway";
-  return { how: `${kind}: roughly ${fmtMinutes(mins)} from where you're staying${a.region !== a.city ? ` (day trip from ${CITY_NAMES[a.city]})` : ""}. Tap Directions for the exact route.`, url: gdir(from, to, "transit"), mode: "transit" };
+  return { how: `${kind}: roughly ${fmtMinutes(mins)} from ${stay ? "your hotel" : "the city centre"}${a.region !== a.city ? ` (day trip from ${CITY_NAMES[a.city]})` : ""}. Tap Directions for the exact route.`, url: gdir(from, to, "transit"), mode: "transit" };
 }
 
 function fmtMinutes(m: number) {
@@ -94,9 +100,9 @@ function distKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }
 }
 
 /** Activities that sell out or need a reservation. Everything else: pay on the day. */
-const BOOK_AHEAD = new Set(["usj", "tdl", "teamlab", "borderless", "ghibli", "foodsample", "kiriko", "ninja", "taiko", "sumo", "paraglide", "kart", "lsnow", "haichang", "sci", "puroland", "beppu", "shnhm", "noodle", "seaparadise"]);
+const BOOK_AHEAD = new Set(["usj", "tdl", "teamlab", "borderless", "ghibli", "foodsample", "kiriko", "ninja", "taiko", "sumo", "paraglide", "kart", "lsnow", "haichang", "sci", "puroland", "beppu", "shnhm", "noodle", "seaparadise", "shcircus", "nintendomuseum", "disneysea", "hpstudio"]);
 export function bookingNeed(a: Activity): { ahead: boolean; text: string } {
-  const ahead = BOOK_AHEAD.has(a.id) || /reserve|dated|book|sold on/i.test(a.cost.note ?? "");
+  const ahead = BOOK_AHEAD.has(a.id) || /reserve|dated|book|sold on|lottery/i.test(a.cost.note ?? "");
   if (a.id === "kart") return { ahead, text: "Book ahead. Each driver needs an International Driving Permit (1949 convention) as well as their licence." };
   return ahead ? { ahead, text: "Book ahead: tickets are dated or sell out, especially over New Year." } : { ahead, text: "No need to book: pay when you get there." };
 }

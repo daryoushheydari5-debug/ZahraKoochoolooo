@@ -9,7 +9,7 @@ import { ActivityPhoto, Ext } from "./common";
 import type { Activity, ScheduleItem, Slot, Track } from "../types";
 
 export const SLOT_NAME: Record<Slot, string> = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
-export const WHO: Record<Track, string> = { all: "Everyone", family: "Sister & husband", solo: "Darius" };
+export const WHO: Record<Track, string> = { all: "Everyone", family: "Zaynab & Ruhullah", solo: "Darius" };
 
 export const costText = (a: Activity) => (a.cost.amount == null ? "Free" : `${money(a.cost.amount, a.cost.currency)}${a.cost.basis === "per-adult" ? " each" : a.cost.basis === "per-group" ? " for the group" : ""}`);
 
