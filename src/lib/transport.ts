@@ -49,6 +49,7 @@ const ROUTES: Record<string, string> = {
   takachiho: "Drive about 3 hours each way via Kumamoto (rental car). No easy train.",
   yufuinfloral: "Drive 1h40 (122 km, tolls) via the Kyushu and Oita expressways, or about 2 hours by train to Yufuin.",
   midorinouta: "Drive: it's out of the city in the forest. Use the rental car and check the map listing for the exact spot.",
+  miyajidake: "Drive about 45 minutes from Hakata (rental car), or JR to Fukuma then a 25-minute walk or short taxi.",
   usj: "Walk about 10 minutes: the hotel is in Universal City.",
   tdl: "JR Keiyo Line to Maihama, about 40 minutes from the apartment.",
   maglev: "Ride it from Pudong Airport when you land: follow the Maglev signs after customs.",
