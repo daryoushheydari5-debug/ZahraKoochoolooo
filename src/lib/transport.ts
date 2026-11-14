@@ -55,6 +55,7 @@ const ROUTES: Record<string, string> = {
   safari: "Drive about 1h45 via the Oita Expressway; it's near Beppu, so combine them.",
   akiyoshido: "Drive about 2 hours via the Chugoku Expressway (rental car day).",
   monkeykart: "Train to the Monkey Kart shop for your route (Shibuya for the Tokyo Tower and Harajuku routes, Asakusa for the Skytree route). From the apartment, about 25–35 minutes.",
+  mitake: "JR Chuo Line to Tachikawa, then the JR Ome Line to Mitake (about 1.5 hours). For the cable car, take the bus from Mitake Station to Takimoto.",
   usj: "Walk about 10 minutes: the hotel is in Universal City.",
   tdl: "JR Keiyo Line to Maihama, about 40 minutes from the apartment.",
   maglev: "Ride it from Pudong Airport when you land: follow the Maglev signs after customs.",
