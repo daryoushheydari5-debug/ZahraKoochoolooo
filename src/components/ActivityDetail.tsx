@@ -30,6 +30,7 @@ export function ActivityDetail({ a, item, onClose, startAdding }: { a: Activity;
         <p className="eyebrow">{a.region === a.city ? CITY_NAMES[a.city] : `Day trip from ${CITY_NAMES[a.city]}`} · {a.duration} · {costText(a)}</p>
         <h3 id="ad-title">{a.title}</h3>
         {item && <p className="when">📅 {fmt(item.date, { dow: true })} · {a.fullDay ? "All day" : SLOT_NAME[item.slot]} · {WHO[item.track]}</p>}
+        {a.closed?.some(([f, t]) => f <= "2027-01-10" && t >= "2026-12-20") && <p className="closednote">⚠️ Likely closed during your trip ({a.closed.map(([f, t]) => `${fmt(f)} – ${fmt(t)}`).join(", ")}). See the tip below.</p>}
         <p>{a.blurb}</p>
 
         <h4>What you'll do</h4>

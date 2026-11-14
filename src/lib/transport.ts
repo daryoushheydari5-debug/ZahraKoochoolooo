@@ -50,6 +50,7 @@ const ROUTES: Record<string, string> = {
   yufuinfloral: "Drive 1h40 (122 km, tolls) via the Kyushu and Oita expressways, or about 2 hours by train to Yufuin.",
   midorinouta: "Drive: it's out of the city in the forest. Use the rental car and check the map listing for the exact spot.",
   miyajidake: "Drive about 45 minutes from Hakata (rental car), or JR to Fukuma then a 25-minute walk or short taxi.",
+  ikoma: "Kintetsu Nara Line from Namba to Ikoma (about 25 min), then the Ikoma Cable Car up, changing at Hozanji. About 1 hour from the hotel.",
   usj: "Walk about 10 minutes: the hotel is in Universal City.",
   tdl: "JR Keiyo Line to Maihama, about 40 minutes from the apartment.",
   maglev: "Ride it from Pudong Airport when you land: follow the Maglev signs after customs.",

@@ -421,3 +421,4 @@ input[type="search"], select, input[type="date"], input[type="number"], input[ty
 .budget label { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
 .budget input { width: 110px; }
 .budget .bar { width: 100%; display: block; }
+.closednote { margin: 4px 0 8px; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--warn); color: var(--warn); font-weight: 600; font-size: 14px; }
