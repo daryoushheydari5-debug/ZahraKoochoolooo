@@ -9,10 +9,10 @@ import { ActivityDetail, costText } from "./ActivityDetail";
 import type { Activity, CityId } from "../types";
 
 const TYPES: { id: string; label: string; tags: string[] }[] = [
-  { id: "thrills", label: "🎢 Thrills & parks", tags: ["theme park", "adrenaline", "rides"] },
+  { id: "thrills", label: "🎢 Thrills & parks", tags: ["theme park", "adrenaline", "rides", "cars"] },
   { id: "hands", label: "🙌 Hands-on", tags: ["hands-on", "interactive", "food", "craft"] },
   { id: "animals", label: "🐧 Animals", tags: ["animals"] },
-  { id: "snow", label: "❄️ Snow & hot springs", tags: ["snow", "onsen", "winter"] },
+  { id: "onsen", label: "♨️ Hot springs & baths", tags: ["onsen"] },
   { id: "night", label: "🌃 Night & lights", tags: ["night", "illumination", "neon"] },
   { id: "tech", label: "🤖 Tech, games & trains", tags: ["technology", "trains", "arcade"] },
 ];
@@ -49,7 +49,7 @@ export function Explorer({ city: initialCity = "all" }: { city?: CityId | "all" 
           {TYPES.map((t) => <button key={t.id} className="chip sm" aria-pressed={type === t.id} onClick={() => setType(t.id)}>{t.label}</button>)}
         </div>
         <p className="small muted">{list.length} ideas</p>
-        <input type="search" placeholder="Search, e.g. snow, onsen, robots…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search activities" />
+        <input type="search" placeholder="Search, e.g. coaster, onsen, robots…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search activities" />
       </div>
 
       <div className="cards">

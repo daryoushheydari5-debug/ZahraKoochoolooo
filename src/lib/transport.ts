@@ -51,6 +51,9 @@ const ROUTES: Record<string, string> = {
   midorinouta: "Drive: it's out of the city in the forest. Use the rental car and check the map listing for the exact spot.",
   miyajidake: "Drive about 45 minutes from Hakata (rental car), or JR to Fukuma then a 25-minute walk or short taxi.",
   ikoma: "Kintetsu Nara Line from Namba to Ikoma (about 25 min), then the Ikoma Cable Car up, changing at Hozanji. About 1 hour from the hotel.",
+  daikoku: "The tour picks you up in central Tokyo (usually Shibuya or Shinjuku) and drives you there.",
+  safari: "Drive about 1h45 via the Oita Expressway; it's near Beppu, so combine them.",
+  akiyoshido: "Drive about 2 hours via the Chugoku Expressway (rental car day).",
   usj: "Walk about 10 minutes: the hotel is in Universal City.",
   tdl: "JR Keiyo Line to Maihama, about 40 minutes from the apartment.",
   maglev: "Ride it from Pudong Airport when you land: follow the Maglev signs after customs.",
@@ -109,7 +112,7 @@ function distKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }
 }
 
 /** Activities that sell out or need a reservation. Everything else: pay on the day. */
-const BOOK_AHEAD = new Set(["usj", "tdl", "teamlab", "borderless", "ghibli", "foodsample", "kiriko", "ninja", "taiko", "sumo", "paraglide", "kart", "lsnow", "haichang", "sci", "puroland", "beppu", "shnhm", "noodle", "seaparadise", "shcircus", "nintendomuseum", "disneysea", "hpstudio"]);
+const BOOK_AHEAD = new Set(["usj", "tdl", "teamlab", "borderless", "ghibli", "foodsample", "kiriko", "ninja", "taiko", "sumo", "paraglide", "kart", "lsnow", "haichang", "sci", "puroland", "beppu", "shnhm", "noodle", "seaparadise", "shcircus", "nintendomuseum", "disneysea", "hpstudio", "kungfu", "papercut", "samuraikyoto", "torokko", "daikoku", "wagashi", "aizome", "doraemon"]);
 export function bookingNeed(a: Activity): { ahead: boolean; text: string } {
   const ahead = BOOK_AHEAD.has(a.id) || /reserve|dated|book|sold on|lottery/i.test(a.cost.note ?? "");
   if (a.id === "kart") return { ahead, text: "Book ahead. Each driver needs an International Driving Permit (1949 convention) as well as their licence." };
