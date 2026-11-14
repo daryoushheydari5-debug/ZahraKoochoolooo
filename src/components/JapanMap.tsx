@@ -5,6 +5,9 @@ import { CITY_COLORS, CITY_NAMES, CITY_POS, gmaps } from "../data/trip";
 import type { CityId } from "../types";
 import { ActivityPhoto, Ext, MapView, type Pin } from "./common";
 import { ActivityDetail } from "./ActivityDetail";
+import { Directions } from "./Directions";
+import { OfflineHelp } from "./OfflineHelp";
+import type { Found } from "../lib/directions";
 
 const BASES: CityId[] = ["sha", "fuk", "osa", "tok"];
 const KINDS: PlaceKind[] = ["town", "village", "nature"];
@@ -22,6 +25,7 @@ export function JapanMap() {
   const [kind, setKind] = useState<PlaceKind | "all">("all");
   const [sel, setSel] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const [found, setFound] = useState<Found | null>(null);
   const cards = useRef<Record<string, HTMLElement | null>>({});
 
   const list = useMemo(() => PLACES.filter((p) => (base === "all" || (base === "japan" ? p.base !== "sha" : p.base === base)) && (kind === "all" || p.kind === kind)), [base, kind]);
@@ -34,8 +38,9 @@ export function JapanMap() {
         pos: { lat: p.lat, lon: p.lon }, label: `${KIND_ICON[p.kind]} ${p.name}`, sub: p.from, color: KIND_COLOR[p.kind],
         onClick: () => { setSel(p.id); cards.current[p.id]?.scrollIntoView({ behavior: "smooth", block: "nearest" }); },
       })),
+      ...(found ? [{ pos: found, label: "📍 " + found.name.split(",")[0], sub: found.name.split(",").slice(1, 3).join(","), color: "#22e4ff", highlight: true, big: true }] : []),
     ];
-  }, [list, base]);
+  }, [list, base, found]);
 
   const act = open ? ACT_BY_ID[open] : null;
 
@@ -43,6 +48,8 @@ export function JapanMap() {
     <section aria-labelledby="map-h" className="placemap">
       <h2 id="map-h" className="h2">Map of Japan</h2>
       <p className="muted">Towns, villages and wild places within a day out of where we're staying. Tap a pin to jump to its card.</p>
+
+      <Directions found={found} setFound={setFound} />
 
       <div className="filters">
         <div className="chips" role="group" aria-label="Area">
@@ -63,7 +70,7 @@ export function JapanMap() {
         </div>
       </div>
 
-      <MapView pins={pins} height="min(62vh, 520px)" />
+      <MapView pins={pins} height="min(62vh, 520px)" focus={found ?? undefined} />
       <p className="small muted maplegend">
         {KINDS.map((k) => <span key={k}><i className="dot" style={{ ["--c" as string]: KIND_COLOR[k] }} /> {KIND_LABEL[k]}</span>)}
         <span><i className="dot big" style={{ ["--c" as string]: "#22e4ff" }} /> Where we stay</span>
@@ -73,6 +80,8 @@ export function JapanMap() {
       <div className="cards">
         {list.map((p) => <PlaceCard key={p.id} p={p} hi={sel === p.id} refFn={(el) => { cards.current[p.id] = el; }} onActivity={setOpen} />)}
       </div>
+
+      <OfflineHelp />
 
       {act && <ActivityDetail a={act} onClose={() => setOpen(null)} />}
     </section>

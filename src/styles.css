@@ -432,3 +432,14 @@ input[type="search"], select, input[type="date"], input[type="number"], input[ty
 .card.place { scroll-margin: 80px; transition: box-shadow 0.3s, border-color 0.3s; }
 .card.place.hi { border-color: var(--c); box-shadow: 0 0 0 2px var(--c), 0 0 22px var(--c); }
 .card.place h3 { font-size: 18px; margin: 0 0 4px; }
+.directions, .offline { margin: 12px 0; }
+.dirform { display: flex; gap: 8px; margin: 8px 0; }
+.dirform input { flex: 1; min-width: 0; font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); }
+.dirform input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(34, 228, 255, 0.25); }
+.dirresult { margin-top: 10px; display: grid; gap: 6px; }
+.ways { list-style: none; padding: 0; margin: 4px 0; display: grid; gap: 6px; }
+.ways li { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.ways li > span:nth-of-type(2) { color: var(--cyan); font-weight: 700; margin-left: 4px; }
+.directions .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.offline h4 { margin: 12px 0 4px; }
+.steps { padding-left: 20px; display: grid; gap: 8px; }
