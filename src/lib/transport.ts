@@ -54,6 +54,7 @@ const ROUTES: Record<string, string> = {
   daikoku: "The tour picks you up in central Tokyo (usually Shibuya or Shinjuku) and drives you there.",
   safari: "Drive about 1h45 via the Oita Expressway; it's near Beppu, so combine them.",
   akiyoshido: "Drive about 2 hours via the Chugoku Expressway (rental car day).",
+  monkeykart: "Train to the Monkey Kart shop for your route (Shibuya for the Tokyo Tower and Harajuku routes, Asakusa for the Skytree route). From the apartment, about 25–35 minutes.",
   usj: "Walk about 10 minutes: the hotel is in Universal City.",
   tdl: "JR Keiyo Line to Maihama, about 40 minutes from the apartment.",
   maglev: "Ride it from Pudong Airport when you land: follow the Maglev signs after customs.",
@@ -112,9 +113,10 @@ function distKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }
 }
 
 /** Activities that sell out or need a reservation. Everything else: pay on the day. */
-const BOOK_AHEAD = new Set(["usj", "tdl", "teamlab", "borderless", "ghibli", "foodsample", "kiriko", "ninja", "taiko", "sumo", "paraglide", "kart", "lsnow", "haichang", "sci", "puroland", "beppu", "shnhm", "noodle", "seaparadise", "shcircus", "nintendomuseum", "disneysea", "hpstudio", "kungfu", "papercut", "samuraikyoto", "torokko", "daikoku", "wagashi", "aizome", "doraemon"]);
+const BOOK_AHEAD = new Set(["usj", "tdl", "teamlab", "borderless", "ghibli", "foodsample", "kiriko", "ninja", "taiko", "sumo", "paraglide", "kart", "lsnow", "haichang", "sci", "puroland", "beppu", "shnhm", "noodle", "seaparadise", "shcircus", "nintendomuseum", "disneysea", "hpstudio", "monkeykart", "kungfu", "papercut", "samuraikyoto", "torokko", "daikoku", "wagashi", "aizome", "doraemon"]);
 export function bookingNeed(a: Activity): { ahead: boolean; text: string } {
   const ahead = BOOK_AHEAD.has(a.id) || /reserve|dated|book|sold on|lottery/i.test(a.cost.note ?? "");
+  if (a.id === "monkeykart") return { ahead, text: "Book a dated slot ahead. Every driver needs an International Driving Permit (1949 convention) plus their Australian licence, or they can't drive." };
   if (a.id === "kart") return { ahead, text: "Book ahead. Each driver needs an International Driving Permit (1949 convention) as well as their licence." };
   return ahead ? { ahead, text: "Book ahead: tickets are dated or sell out, especially over New Year." } : { ahead, text: "No need to book: pay when you get there." };
 }
