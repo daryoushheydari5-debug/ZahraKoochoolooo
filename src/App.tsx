@@ -6,6 +6,7 @@ import { Checklist } from "./components/Checklist";
 import { googleWeather } from "./lib/transport";
 import type { CityId } from "./types";
 import { Explorer } from "./components/Explorer";
+import { JapanMap } from "./components/JapanMap";
 import { RoadTrips } from "./components/RoadTrips";
 import { FujiPlanner } from "./components/FujiPlanner";
 import { ThemeParks } from "./components/ThemeParks";
@@ -16,6 +17,7 @@ import { Confirm } from "./components/common";
 const TABS = [
   { id: "plan", label: "Plan", icon: "🗓️" },
   { id: "explore", label: "Explore", icon: "✨" },
+  { id: "map", label: "Map", icon: "🗾" },
   { id: "book", label: "To book", icon: "✅" },
   { id: "money", label: "Money", icon: "💴" },
 ] as const;
@@ -70,6 +72,7 @@ export function App() {
           {tab === "book" && <Checklist goExplore={() => goExplore()} />}
           {tab === "route" && <RoutePanel />}
           {tab === "explore" && <Explorer key={exploreCity} city={exploreCity} />}
+          {tab === "map" && <JapanMap />}
           {tab === "roads" && <RoadTrips />}
           {tab === "fuji" && <FujiPlanner />}
           {tab === "parks" && <ThemeParks />}

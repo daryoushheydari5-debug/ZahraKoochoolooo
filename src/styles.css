@@ -422,3 +422,13 @@ input[type="search"], select, input[type="date"], input[type="number"], input[ty
 .budget input { width: 110px; }
 .budget .bar { width: 100%; display: block; }
 .closednote { margin: 4px 0 8px; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--warn); color: var(--warn); font-weight: 600; font-size: 14px; }
+
+/* Map of Japan */
+.placemap .map { border-radius: 16px; border: 1.5px solid var(--line); box-shadow: 0 0 24px rgba(177, 77, 255, 0.25); }
+.maplegend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 8px 0 4px; }
+.maplegend span { display: inline-flex; align-items: center; gap: 6px; }
+.pin.big { width: 24px; height: 24px; border-color: #07060f; box-shadow: 0 0 0 3px var(--c), 0 0 14px var(--c); }
+.dot.big { width: 12px; height: 12px; }
+.card.place { scroll-margin: 80px; transition: box-shadow 0.3s, border-color 0.3s; }
+.card.place.hi { border-color: var(--c); box-shadow: 0 0 0 2px var(--c), 0 0 22px var(--c); }
+.card.place h3 { font-size: 18px; margin: 0 0 4px; }

@@ -7,7 +7,9 @@ import { drawScene } from "../data/scenes";
 import { WEATHER_ATTRIBUTION } from "../lib/weather";
 
 /* ---------------- Photo with attribution, falling back to the drawing ---------------- */
-export function ActivityPhoto({ a, children }: { a: Activity; children?: ReactNode }) {
+/** Anything with a photo search and a fallback drawing: an activity or a place on the map. */
+export type PhotoSubject = Pick<Activity, "id" | "title" | "photoQuery" | "scene">;
+export function ActivityPhoto({ a, children }: { a: PhotoSubject; children?: ReactNode }) {
   const [photo, setPhoto] = useState<Photo | null | undefined>(undefined);
   const [broken, setBroken] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -67,8 +69,8 @@ export function Thumb({ a }: { a: Activity }) {
 }
 
 /* ---------------- Leaflet map ---------------- */
-export interface Pin { pos: LatLon; label: string; color: string; href?: string; highlight?: boolean; sub?: string }
-export function MapView({ pins, line, height = 280, focus }: { pins: Pin[]; line?: [number, number][]; height?: number; focus?: LatLon }) {
+export interface Pin { pos: LatLon; label: string; color: string; href?: string; highlight?: boolean; sub?: string; onClick?: () => void; big?: boolean }
+export function MapView({ pins, line, height = 280, focus }: { pins: Pin[]; line?: [number, number][]; height?: number | string; focus?: LatLon }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -90,13 +92,14 @@ export function MapView({ pins, line, height = 280, focus }: { pins: Pin[]; line
     g.clearLayers();
     const pts: L.LatLngExpression[] = [];
     for (const p of pins) {
-      const icon = L.divIcon({ className: "", html: `<span class="pin${p.highlight ? " hi" : ""}" style="--c:${p.color}"></span>`, iconSize: [22, 22], iconAnchor: [11, 11] });
+      const icon = L.divIcon({ className: "", html: `<span class="pin${p.highlight ? " hi" : ""}${p.big ? " big" : ""}" style="--c:${p.color}"></span>`, iconSize: [22, 22], iconAnchor: [11, 11] });
       const mk = L.marker([p.pos.lat, p.pos.lon], { icon, title: p.label }).addTo(g);
       const div = document.createElement("div");
       const b = document.createElement("b"); b.textContent = p.label; div.appendChild(b);
       if (p.sub) { const s = document.createElement("div"); s.textContent = p.sub; div.appendChild(s); }
       if (p.href) { const a = document.createElement("a"); a.href = p.href; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Book / open ↗"; div.appendChild(a); }
       mk.bindPopup(div);
+      if (p.onClick) mk.on("click", p.onClick);
       if (p.highlight) setTimeout(() => mk.openPopup(), 50);
       pts.push([p.pos.lat, p.pos.lon]);
     }
